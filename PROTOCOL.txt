@@ -1,0 +1,83 @@
+Projekt gry na Programowanie Współbieżne,
+Sebastian Maciejewski, grupa I1, nr indeksu 132275, luty 2018
+
+Komunikacja między elementami gry - klientem i serwerem - przebiega za pomocą kolejek komunikatów,
+pamięci współdzielonej i semaforów.
+
+Każda z kolejek komunikatów ma swoje unikalne ID:
+Klient 1 - Serwer: 256
+Klient 2 - Serwer: 257
+Klient 3 - Serwer: 258
+
+W każdej z tych kolejek można przesłać 10 różnych typów komunikatów, wśród których te o numerach
+od 0 do 4 to komunikaty serwera dla klienta, a komunikaty od 5 do 9 to komunikaty klienta dla serwera.
+
+0 - Komunikat, przy pomocy którego serwer informuje graczy o rozpoczęciu gry (gdy wszyscy gracze
+	są gotowi)
+1 - Komunikat, który zawiera wszystkie dane gracza (strukturę GRACZ)
+2 - Komunikat, przy pomocy którego serwer informuje graczy o zakończeniu gry i podaje numer 
+	zwycięzcy
+3 - Komunikat zezwolenia (lub zabronienia) realizacji produkcji jednostek, których zażądał gracz
+4 - Komunikat potwierdzenia lub zaprzeczenia dostępności jednostek do ataku
+
+5 - Komunikat, przy pomocy którego gracz informuje serwer o swojej gotowości do gry
+6 - Komunikat, który prosi serwer o zezwolenie na produkcję jednostek
+7 - Komunikat produkcji jednostek, który gracz wysyła do serwera po otrzymaniu zezwolenia
+	na produkcję
+8 - Komunikat będący zapytaniem o dostępność pewnej ilości jednostek danego typu
+9 - Komunikat, który sygnalizuje wydanie rozkazu ataku na innego gracza
+
+Struktury, które są przesyłane pomiędzy klientem a serwerem to:
+
+gracz - struktura zawierająca wszystkie informacje o aktualnym stanie gracza. Zawiera pola takie 
+jak numer gracza, ilość surowców, ilość jednostek danego typu, atak, obrona i ilość zwycięstw;
+
+msg - prosta wiadomość, zawierająca jedynie kod wiadomości i pole numer służące do wysyłania
+różnych informacji (np. pytanie o zezwolenie na produkcję jednostek zwraca numer = 1, gdy
+serwer udziela graczowi zezwolenia);
+
+komunikatAtaku - struktura zawierająca informacje o planowanym ataku. Jej pola to (poza typem)
+ilośc jednostek danego typu wyłanych do ataku, numer atakującego i numer obrońcy;
+
+komunikatSzkolenia - struktura zawierająca informacje o planowanym treningu jednostek. Zawiera
+informacje o rodzaju i ilości jednostek do wyszkolenia.
+
+
+Semafory wykorzystane w programie serwera to:
+
+semaforGotowości - zabezpiecza czekanie na wszystkich graczy zanim nastąpi właściwe rozpoczęcie
+gry. Opuszczany o 1 przez każdego z graczy, umożliwia przejście dalej po uzyskaniu przez semafor
+wartości 0;
+
+dostepDoGracza - tablica zawierająca po jednym semaforze dla każdego gracza. Pozwalają one graczom
+zapewnić wyłączny dostęp do danych;
+
+semaforWalki - tablica zawierająca po jednym semaforze dla każdego gracza. Te semafory pozwalają
+zabezpieczyć moment, w którym obliczana jest walka - zapobiegają sytuacji, w której dwóch graczy
+jednocześnie atakuje innego gracza.
+
+
+Pamięci współdzielone w programie serwera i klienta wraz z kodem (kluczem) to:
+Po stronie klienta:
+	- struktura informacji o graczu, dzięki której cały czas gracz posiada aktualne (odświeżane)
+	informacje z serwera na swój temat	
+	(kod w postaci 512 + 16 * numerGracza)
+	- zmienna 'koniec', która pozwala wykryć zakończenie gry
+	(kod w postaci 512 + 16 * numerGracza + 1)
+	- zmienna 'czyAktualizowac', która ogranicza czas odświeżania danych w głównym menu (wyłączana
+	np. wtedy, gdy gracz wybiera jednostki do rekrutacji)
+	(kod w postaci 512 + 16 * numerGracza + 2)
+
+Po stronie serwera:
+	- zmienna 'istniejeZwyciezca' analogiczna do zmiennej 'koniec' w programie gracza
+	(kod 35) 
+	- struktura typu GRACZ dla każdego z graczy, służąca do synchronizowania danych mięzy 
+	graczem a serwerem
+	(kod w postaci 32 + numerGracza)
+
+
+
+
+ 
+
+
